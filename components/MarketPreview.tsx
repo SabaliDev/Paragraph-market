@@ -112,7 +112,7 @@ export default function MarketPreview({ formData }: MarketPreviewProps) {
             <div>
               <span className="text-text-muted-dark">Minimum bet:</span>
               <p className="text-text-dark font-medium">
-                {formData.minBetAmount ? `${formData.minBetAmount} ETH` : 'Not set'}
+                {formData.minBetAmount ? `${formData.minBetAmount} BNB` : 'Not set'}
               </p>
             </div>
             <div>

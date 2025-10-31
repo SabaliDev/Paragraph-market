@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 interface NavItem {
@@ -21,6 +22,15 @@ const navigation: NavItem[] = [
 export default function Sidebar() {
   const [activeItem, setActiveItem] = useState('Dashboard');
   const { address, isConnected } = useAccount();
+  const pathname = usePathname();
+
+  // Update active item based on current pathname
+  useEffect(() => {
+    const currentPage = navigation.find(item => item.href === pathname);
+    if (currentPage) {
+      setActiveItem(currentPage.name);
+    }
+  }, [pathname]);
 
   return (
     <aside className="flex flex-col w-64 bg-background-light dark:bg-background-dark border-r border-white/10 p-4 shrink-0">
@@ -73,7 +83,7 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex flex-col gap-2 flex-grow">
         {navigation.map((item) => (
-          <Link
+          <a
             key={item.name}
             href={item.href}
             className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
@@ -81,13 +91,12 @@ export default function Sidebar() {
                 ? 'bg-primary/20 text-primary font-bold'
                 : 'hover:bg-white/5 text-text-muted-dark hover:text-text-dark'
             }`}
-            onClick={() => setActiveItem(item.name)}
           >
             <span className="material-symbols-outlined">{item.icon}</span>
             <p className={`text-sm ${activeItem === item.name ? 'font-bold' : 'font-medium'}`}>
               {item.name}
             </p>
-          </Link>
+          </a>
         ))}
       </nav>
 

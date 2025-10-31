@@ -1,9 +1,9 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { mainnet, polygon, optimism, arbitrum, base, sepolia } from 'wagmi/chains';
+import { bscTestnet } from 'wagmi/chains';
 
 export const config = getDefaultConfig({
   appName: 'AuracleMarket',
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID',
-  chains: [mainnet, polygon, optimism, arbitrum, base, sepolia],
+  chains: [bscTestnet],
   ssr: true,
 });

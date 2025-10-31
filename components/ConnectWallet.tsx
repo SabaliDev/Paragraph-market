@@ -1,8 +1,26 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export default function ConnectWallet() {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <ConnectButton.Custom>
       {({
@@ -91,19 +109,67 @@ export default function ConnectWallet() {
                     <span className="text-sm font-medium">{chain.name}</span>
                   </button>
 
-                  <button
-                    onClick={openAccountModal}
-                    type="button"
-                    className="flex items-center gap-2 rounded-lg h-10 px-3 bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-sm">account_balance_wallet</span>
-                    <span className="text-sm font-medium">
-                      {account.displayName}
-                    </span>
-                    <span className="text-xs opacity-70">
-                      {account.displayBalance ? ` (${account.displayBalance})` : ''}
-                    </span>
-                  </button>
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      type="button"
+                      className="flex items-center gap-2 rounded-lg h-10 px-3 bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-sm">account_balance_wallet</span>
+                      <span className="text-sm font-medium">
+                        {account.displayName}
+                      </span>
+                      <span className="text-xs opacity-70">
+                        {account.displayBalance ? ` (${account.displayBalance})` : ''}
+                      </span>
+                      <span className="material-symbols-outlined text-sm">
+                        {isDropdownOpen ? 'expand_less' : 'expand_more'}
+                      </span>
+                    </button>
+
+                    {isDropdownOpen && (
+                      <div className="absolute right-0 top-12 w-64 bg-surface-dark border border-white/10 rounded-lg shadow-lg z-50">
+                        <div className="p-3 border-b border-white/10">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="material-symbols-outlined text-primary">account_balance_wallet</span>
+                            <span className="text-sm font-medium text-text-dark">Connected Wallet</span>
+                          </div>
+                          <div className="text-xs text-text-muted-dark">
+                            {account.address}
+                          </div>
+                          {account.displayBalance && (
+                            <div className="text-xs text-text-muted-dark mt-1">
+                              Balance: {account.displayBalance}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="p-2">
+                          <button
+                            onClick={() => {
+                              openAccountModal();
+                              setIsDropdownOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-dark hover:bg-white/5 rounded-lg transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-sm">settings</span>
+                            Account Settings
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              openAccountModal();
+                              setIsDropdownOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-sm">logout</span>
+                            Disconnect Wallet
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })()}

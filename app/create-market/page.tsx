@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAccount } from 'wagmi';
 import Sidebar from '../../components/Sidebar';
 import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
@@ -9,9 +10,12 @@ import Select from '../../components/ui/Select';
 import DateTimePicker from '../../components/ui/DateTimePicker';
 import MarketPreview from '../../components/MarketPreview';
 import { CreateMarketForm, MarketFormErrors, MARKET_CATEGORIES } from '../../types/market';
+import { usePredictionMarketWrite } from '../../hooks/useContracts';
 
 export default function CreateMarket() {
   const router = useRouter();
+  const { address, isConnected } = useAccount();
+  const { createMarket, isPending, isConfirming, isConfirmed, error } = usePredictionMarketWrite();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -110,7 +114,7 @@ export default function CreateMarket() {
       }
 
       if (Number(formData.minBetAmount) > 10) {
-        newErrors.minBetAmount = 'Minimum bet amount should not exceed 10 ETH';
+        newErrors.minBetAmount = 'Minimum bet amount should not exceed 10 BNB';
       }
     }
 
@@ -130,18 +134,38 @@ export default function CreateMarket() {
 
   const handleSubmit = async () => {
     if (!validateStep(3)) return;
+    if (!isConnected) {
+      alert('Please connect your wallet first');
+      return;
+    }
 
     setIsSubmitting(true);
     
     try {
-      // TODO: Integrate with smart contract
       console.log('Creating market with data:', formData);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Calculate duration in seconds
+      const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
+      const now = new Date();
+      const duration = Math.floor((endDateTime.getTime() - now.getTime()) / 1000);
       
-      // Redirect to dashboard or market page
-      router.push('/dashboard');
+      // Convert resolution delay from hours to seconds
+      const resolutionDelay = formData.resolutionDelay * 3600;
+      
+      // Create market on blockchain
+      await createMarket(
+        formData.question,
+        formData.category,
+        duration,
+        resolutionDelay,
+        formData.optionA,
+        formData.optionB
+      );
+      
+      // Wait for transaction confirmation
+      if (isConfirmed) {
+        router.push('/dashboard');
+      }
     } catch (error) {
       console.error('Error creating market:', error);
       // Handle error (show toast, etc.)
@@ -281,7 +305,7 @@ export default function CreateMarket() {
             />
 
             <Input
-              label="Minimum Bet Amount (ETH)"
+              label="Minimum Bet Amount (BNB)"
               type="number"
               step="0.001"
               min="0.001"
@@ -386,13 +410,18 @@ export default function CreateMarket() {
                   ) : (
                     <button
                       onClick={handleSubmit}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isPending || isConfirming || !isConnected}
                       className="flex items-center gap-2 px-6 py-2 bg-secondary text-background-dark text-sm font-bold rounded-lg shadow-lg shadow-secondary/20 hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isSubmitting ? (
+                      {isSubmitting || isPending || isConfirming ? (
                         <>
                           <span className="animate-spin material-symbols-outlined text-sm">refresh</span>
-                          Creating...
+                          {isPending ? 'Confirming...' : isConfirming ? 'Processing...' : 'Creating...'}
+                        </>
+                      ) : !isConnected ? (
+                        <>
+                          <span className="material-symbols-outlined text-sm">account_balance_wallet</span>
+                          Connect Wallet
                         </>
                       ) : (
                         <>

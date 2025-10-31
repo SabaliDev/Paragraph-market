@@ -1,34 +1,41 @@
+import { formatTokenAmount } from '../hooks/useContracts';
+import type { CreatorStats } from '../lib/contracts';
+
 interface StatCard {
   title: string;
   value: string;
-  change: string;
-  trend: 'up' | 'down';
+  change?: string;
+  trend?: 'up' | 'down';
 }
 
-const statsData: StatCard[] = [
-  {
-    title: 'Total Predictions',
-    value: '1,234,567',
-    change: '+5.2% vs last month',
-    trend: 'up'
-  },
-  {
-    title: 'Total Volume',
-    value: '$890.12k',
-    change: '+12.8% vs last month',
-    trend: 'up'
-  },
-  {
-    title: 'Active Markets',
-    value: '42',
-    change: '-1.5% vs last month',
-    trend: 'down'
-  }
-];
+interface StatsCardsProps {
+  marketCount?: bigint;
+  creatorStats?: CreatorStats;
+  isConnected: boolean;
+}
 
-export default function StatsCards() {
+export default function StatsCards({ marketCount, creatorStats, isConnected }: StatsCardsProps) {
+  const statsData: StatCard[] = [
+    {
+      title: 'Total Markets',
+      value: marketCount ? marketCount.toString() : '0',
+    },
+    {
+      title: 'Your Markets',
+      value: isConnected && creatorStats?.marketsCreated ? creatorStats.marketsCreated.toString() : '0',
+    },
+    {
+      title: 'Total Volume',
+      value: isConnected && creatorStats?.totalVolume ? `${formatTokenAmount(creatorStats.totalVolume)} BNB` : '0 BNB',
+    },
+    {
+      title: 'Available Fees',
+      value: isConnected && creatorStats?.availableFees ? `${formatTokenAmount(creatorStats.availableFees)} BNB` : '0 BNB',
+    }
+  ];
+
   return (
-    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {statsData.map((stat, index) => (
         <div 
           key={index}
@@ -40,11 +47,13 @@ export default function StatsCards() {
           <p className="font-display tracking-tight text-3xl font-bold text-text-dark">
             {stat.value}
           </p>
-          <p className={`text-sm font-medium ${
-            stat.trend === 'up' ? 'text-primary' : 'text-[#fa5c38]'
-          }`}>
-            {stat.change}
-          </p>
+          {stat.change && (
+            <p className={`text-sm font-medium ${
+              stat.trend === 'up' ? 'text-primary' : 'text-[#fa5c38]'
+            }`}>
+              {stat.change}
+            </p>
+          )}
         </div>
       ))}
     </section>

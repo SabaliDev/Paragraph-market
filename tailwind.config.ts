@@ -18,6 +18,10 @@ export default {
         "text-light": "#101820",
         "text-dark": "#E8E9EB", // Muted Off-White
         "text-muted-dark": "#98A2B3",
+        "text-muted-light": "#B0B0B0",
+        "border-color": "#3a4c55",
+        "accent-gold": "#FFBF00",
+        "accent-cyan": "#00FFFF",
       },
       fontFamily: {
         "display": ["var(--font-space-grotesk)", "Space Grotesk", "sans-serif"],
