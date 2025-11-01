@@ -16,7 +16,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AuracleMarket - Developer Dashboard",
+  title: "ParagraphMarket - Developer Dashboard",
   description: "Embedded prediction market platform for content creators",
 };
 

@@ -1,7 +1,7 @@
 import { EmbedConfig, Market } from '../types/embed';
 
 export const generateEmbedUrl = (marketId: string, config?: Partial<EmbedConfig>): string => {
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://auraclemarket.com';
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://Paragraphmarket.com';
   const params = new URLSearchParams();
   
   if (config) {
@@ -25,12 +25,12 @@ export const generateIframeCode = (marketId: string, config: EmbedConfig): strin
   height="${config.height}"
   style="border: none; border-radius: ${config.borderRadius}; overflow: hidden;"
   allow="clipboard-write"
-  title="AuracleMarket Prediction"
+  title="ParagraphMarket Prediction"
 ></iframe>`;
 };
 
 export const generateShareUrl = (marketId: string): string => {
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://auraclemarket.com';
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://Paragraphmarket.com';
   return `${baseUrl}/market/${marketId}`;
 };
 
@@ -60,7 +60,7 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
 };
 
 export const generateMarketImageUrl = (market: Market, template: string = 'default'): string => {
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://auraclemarket.com';
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://Paragraphmarket.com';
   const params = new URLSearchParams({
     question: market.question,
     optionA: market.optionA,

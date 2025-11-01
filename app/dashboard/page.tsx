@@ -5,6 +5,7 @@ import Sidebar from '../../components/Sidebar';
 import StatsCards from '../../components/StatsCards';
 import RecentMarketsTable from '../../components/RecentMarketsTable';
 import ConnectWallet from '../../components/ConnectWallet';
+import PMTTokenWidget from '../../components/PMTTokenWidget';
 import { usePredictionMarketRead } from '../../hooks/useContracts';
 
 export default function Dashboard() {
@@ -54,6 +55,13 @@ export default function Dashboard() {
                     <p className="text-text-muted-dark text-sm">Connect your wallet to view your markets and stats</p>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* PMT Token Management */}
+            {isConnected && (
+              <div className="mb-8">
+                <PMTTokenWidget />
               </div>
             )}
 

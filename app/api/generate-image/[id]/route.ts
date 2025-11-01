@@ -85,7 +85,7 @@ function generateMarketSVG({
       ${template !== 'bold' ? `<rect x="4" y="4" width="792" height="592" fill="none" stroke="${colors.accent}" stroke-width="4"/>` : ''}
       
       <!-- Brand -->
-      <text x="400" y="60" text-anchor="middle" class="brand-text">AuracleMarket</text>
+      <text x="400" y="60" text-anchor="middle" class="brand-text">ParagraphMarket</text>
       
       <!-- Category -->
       <text x="400" y="100" text-anchor="middle" class="category-text">${category.toUpperCase()}</text>
@@ -104,7 +104,7 @@ function generateMarketSVG({
       <text x="600" y="420" text-anchor="middle" class="option-text">${truncateText(optionB, 25)}</text>
       
       <!-- Footer -->
-      <text x="400" y="560" text-anchor="middle" class="footer-text">Powered by AuracleMarket • Prediction Markets</text>
+      <text x="400" y="560" text-anchor="middle" class="footer-text">Powered by ParagraphMarket • Prediction Markets</text>
     </svg>
   `;
 }

@@ -114,7 +114,7 @@ export default function CreateMarket() {
       }
 
       if (Number(formData.minBetAmount) > 10) {
-        newErrors.minBetAmount = 'Minimum bet amount should not exceed 10 BNB';
+        newErrors.minBetAmount = 'Minimum bet amount should not exceed 10 PMT';
       }
     }
 
@@ -305,7 +305,7 @@ export default function CreateMarket() {
             />
 
             <Input
-              label="Minimum Bet Amount (BNB)"
+              label="Minimum Bet Amount (PMT)"
               type="number"
               step="0.001"
               min="0.001"

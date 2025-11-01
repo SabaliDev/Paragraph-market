@@ -23,7 +23,7 @@ export default function UrlCopyComponent({ marketId, title, description }: UrlCo
 
   const getFormattedContent = () => {
     const marketTitle = title || 'Prediction Market';
-    const marketDescription = description || 'Check out this prediction market on AuracleMarket';
+    const marketDescription = description || 'Check out this prediction market on ParagraphMarket';
     
     switch (selectedFormat) {
       case 'markdown':
@@ -48,7 +48,7 @@ export default function UrlCopyComponent({ marketId, title, description }: UrlCo
   const handleSocialShare = (platform: 'twitter' | 'facebook' | 'linkedin' | 'reddit') => {
     const encodedUrl = encodeURIComponent(shareUrl);
     const encodedTitle = encodeURIComponent(title || 'Check out this prediction market!');
-    const encodedDescription = encodeURIComponent(description || 'AuracleMarket - Embedded prediction markets for content creators');
+    const encodedDescription = encodeURIComponent(description || 'ParagraphMarket - Embedded prediction markets for content creators');
     
     let shareUrl_platform = '';
     

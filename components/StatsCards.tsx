@@ -26,11 +26,11 @@ export default function StatsCards({ marketCount, creatorStats, isConnected }: S
     },
     {
       title: 'Total Volume',
-      value: isConnected && creatorStats?.totalVolume ? `${formatTokenAmount(creatorStats.totalVolume)} BNB` : '0 BNB',
+      value: isConnected && creatorStats?.totalVolume ? `${formatTokenAmount(creatorStats.totalVolume)} PMT` : '0 PMT',
     },
     {
       title: 'Available Fees',
-      value: isConnected && creatorStats?.availableFees ? `${formatTokenAmount(creatorStats.availableFees)} BNB` : '0 BNB',
+      value: isConnected && creatorStats?.availableFees ? `${formatTokenAmount(creatorStats.availableFees)} PMT` : '0 PMT',
     }
   ];
 

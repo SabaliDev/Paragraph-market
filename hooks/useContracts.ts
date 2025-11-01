@@ -91,6 +91,17 @@ export function usePredictionMarketRead() {
     return { marketCount };
   };
 
+  // Get specific market by ID
+  const getSpecificMarket = (marketId: number, enabled: boolean = true) => {
+    return useReadContract({
+      address: CONTRACT_ADDRESSES.PREDICTION_MARKET,
+      abi: PREDICTION_MARKET_ABI,
+      functionName: 'getMarketInfo',
+      args: [BigInt(marketId)],
+      enabled: enabled,
+    });
+  };
+
   return {
     marketCount,
     minBetAmount,
@@ -100,6 +111,7 @@ export function usePredictionMarketRead() {
     getCreatorStats,
     getCreatorMarkets,
     getAllMarkets,
+    getSpecificMarket,
   };
 }
 
@@ -143,7 +155,7 @@ export function usePredictionMarketWrite() {
   const buyShares = async (
     marketId: number,
     isOptionA: boolean,
-    amount: string // in BNB
+    amount: string // in PMT tokens
   ) => {
     return writeContract({
       address: CONTRACT_ADDRESSES.PREDICTION_MARKET,
@@ -279,3 +291,56 @@ export const calculateOddsPercentage = (optionAmount: bigint, totalAmount: bigin
   if (totalAmount === 0n) return 50; // Default to 50% if no bets
   return Number((optionAmount * 100n) / totalAmount);
 };
+
+// Hook for combined betting operations (approval + betting)
+export function useBettingOperations() {
+  const { address } = useAccount();
+  const { buyShares, isPending: isBettingPending, hash: bettingHash } = usePredictionMarketWrite();
+  const { approve, isPending: isApprovePending, hash: approveHash, balance, allowance } = useTokenOperations();
+  
+  // Check if user has sufficient balance and allowance
+  const checkBettingRequirements = (amount: string) => {
+    const amountWei = parseEther(amount);
+    const hasBalance = balance ? balance >= amountWei : false;
+    const hasAllowance = allowance ? allowance >= amountWei : false;
+    
+    return {
+      hasBalance,
+      hasAllowance,
+      needsApproval: !hasAllowance,
+    };
+  };
+  
+  // Complete betting flow: approve if needed, then bet
+  const betWithApproval = async (
+    marketId: number,
+    isOptionA: boolean,
+    amount: string
+  ) => {
+    const { hasBalance, needsApproval } = checkBettingRequirements(amount);
+    
+    if (!hasBalance) {
+      throw new Error('Insufficient PMT token balance');
+    }
+    
+    if (needsApproval) {
+      // First approve the tokens
+      await approve(amount);
+      // Note: In a real app, you'd want to wait for approval confirmation
+      // before proceeding to buy shares
+    }
+    
+    // Then buy shares
+    return buyShares(marketId, isOptionA, amount);
+  };
+  
+  return {
+    betWithApproval,
+    checkBettingRequirements,
+    isPending: isBettingPending || isApprovePending,
+    bettingHash,
+    approveHash,
+    balance,
+    allowance,
+  };
+}

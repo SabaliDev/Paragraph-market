@@ -108,107 +108,136 @@ function StatusBadge({ status }: { status: 'active' | 'resolved' }) {
 interface RecentMarketsTableProps {
   isConnected: boolean;
   userAddress?: string;
+  showAllMarkets?: boolean; // New prop to control whether to show all markets or just user markets
 }
 
-export default function RecentMarketsTable({ isConnected, userAddress }: RecentMarketsTableProps) {
+export default function RecentMarketsTable({ isConnected, userAddress, showAllMarkets = false }: RecentMarketsTableProps) {
   const router = useRouter();
   const [markets, setMarkets] = useState<Market[]>([]);
   const { marketCount, getCreatorMarkets, getMarketInfo } = usePredictionMarketRead();
   
-  // Get user's markets if connected
+  // Get user's markets if connected and not showing all markets
   const userMarketsQuery = getCreatorMarkets(userAddress || '');
   
   // Get market info for market ID 0 (first market) if there are markets
   const firstMarketQuery = getMarketInfo(0);
   
+  // For showing all markets, we'll fetch the first few markets (limited to avoid hook issues)
+  const market1Query = getMarketInfo(1);
+  const market2Query = getMarketInfo(2);
+  const market3Query = getMarketInfo(3);
+  const market4Query = getMarketInfo(4);
+
+  // Helper function to convert contract market data to Market interface
+  const convertMarketData = (marketData: any, marketId: string): Market | null => {
+    try {
+      const [
+        creator,
+        question,
+        category,
+        endTime,
+        resolutionTime,
+        outcome,
+        optionA,
+        optionB,
+        totalOptionABets,
+        totalOptionBBets,
+        resolved,
+        creatorFeesCollected,
+        platformFeesCollected
+      ] = marketData;
+      
+      const optionABets = bigIntToNumber(totalOptionABets);
+      const optionBBets = bigIntToNumber(totalOptionBBets);
+      const endTimeSeconds = bigIntToNumber(endTime);
+      const resolutionTimeSeconds = bigIntToNumber(resolutionTime);
+      
+      const totalPredictions = optionABets + optionBBets;
+      const totalVolumeWei = BigInt(optionABets) + BigInt(optionBBets);
+      
+      return {
+        id: marketId,
+        question: question || 'Loading...',
+        category: category || 'General',
+        description: '',
+        optionA: optionA || 'Yes',
+        optionB: optionB || 'No',
+        optionAOdds: totalPredictions > 0 ? Math.round((optionABets / totalPredictions) * 10000) : 5000,
+        optionBOdds: totalPredictions > 0 ? Math.round((optionBBets / totalPredictions) * 10000) : 5000,
+        totalPredictions: totalPredictions,
+        totalVolume: `${formatTokenAmount(totalVolumeWei)} PMT`,
+        endTime: endTimeSeconds > 0 ? new Date(endTimeSeconds * 1000).toISOString() : new Date().toISOString(),
+        resolutionTime: resolutionTimeSeconds > 0 ? new Date(resolutionTimeSeconds * 1000).toISOString() : new Date().toISOString(),
+        status: resolved ? 'resolved' : 'active',
+        creator: creator || '0x0000000000000000000000000000000000000000',
+        createdAt: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error(`Error processing market data for ID ${marketId}:`, error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     console.log('=== MARKETS UPDATE DEBUG ===');
     console.log('isConnected:', isConnected);
+    console.log('showAllMarkets:', showAllMarkets);
     console.log('marketCount:', marketCount);
-    console.log('firstMarketQuery.data:', firstMarketQuery.data);
-    console.log('firstMarketQuery loading state:', firstMarketQuery.isLoading);
-    console.log('firstMarketQuery error:', firstMarketQuery.error);
     
     if (!isConnected) {
       // Show mock data when not connected
       console.log('Not connected - using mock data');
       setMarkets(marketsData);
-    } else {
-      // Show real markets from contract
+    } else if (showAllMarkets) {
+      // Show all available markets from contract
+      console.log('Showing all markets');
       const contractMarkets: Market[] = [];
       
-      // If we have market data from the contract, convert it to our Market format
-      console.log('Checking market data conditions:');
-      console.log('- firstMarketQuery.data exists:', !!firstMarketQuery.data);
-      console.log('- marketCount exists:', !!marketCount);
-      console.log('- marketCount > 0:', marketCount && marketCount > 0n);
+      // Process all available market queries
+      const marketQueries = [
+        { query: firstMarketQuery, id: '0' },
+        { query: market1Query, id: '1' },
+        { query: market2Query, id: '2' },
+        { query: market3Query, id: '3' },
+        { query: market4Query, id: '4' },
+      ];
+      
+      marketQueries.forEach(({ query, id }) => {
+        if (query.data) {
+          const market = convertMarketData(query.data, id);
+          if (market) {
+            contractMarkets.push(market);
+          }
+        }
+      });
+      
+      console.log('Contract markets found:', contractMarkets.length);
+      setMarkets(contractMarkets);
+    } else {
+      // Show real markets from contract (original logic for user markets)
+      const contractMarkets: Market[] = [];
       
       if (firstMarketQuery.data && marketCount && marketCount > 0n) {
-        console.log('✅ All conditions met - processing market data');
-        try {
-          const marketData = firstMarketQuery.data as any;
-          console.log('Raw market data:', marketData);
-          
-          // Access the tuple fields by index or destructure
-          const [
-            creator,
-            question,
-            category,
-            endTime,
-            resolutionTime,
-            outcome,
-            optionA,
-            optionB,
-            totalOptionABets,
-            totalOptionBBets,
-            resolved,
-            creatorFeesCollected,
-            platformFeesCollected
-          ] = marketData;
-          
-          // Safely convert all values to avoid BigInt serialization issues
-          const optionABets = bigIntToNumber(totalOptionABets);
-          const optionBBets = bigIntToNumber(totalOptionBBets);
-          const endTimeSeconds = bigIntToNumber(endTime);
-          const resolutionTimeSeconds = bigIntToNumber(resolutionTime);
-          
-          const totalPredictions = optionABets + optionBBets;
-          const totalVolumeWei = BigInt(optionABets) + BigInt(optionBBets);
-          
-          const market: Market = {
-            id: '0',
-            question: question || 'Loading...',
-            category: category || 'General',
-            description: '',
-            optionA: optionA || 'Yes',
-            optionB: optionB || 'No',
-            optionAOdds: 5000, // Default 50/50 - will calculate real odds later
-            optionBOdds: 5000,
-            totalPredictions: totalPredictions,
-            totalVolume: `${formatTokenAmount(totalVolumeWei)} BNB`,
-            endTime: endTimeSeconds > 0 ? new Date(endTimeSeconds * 1000).toISOString() : new Date().toISOString(),
-            resolutionTime: resolutionTimeSeconds > 0 ? new Date(resolutionTimeSeconds * 1000).toISOString() : new Date().toISOString(),
-            status: resolved ? 'resolved' : 'active',
-            creator: creator || '0x0000000000000000000000000000000000000000',
-            createdAt: new Date().toISOString()
-          };
-          
+        const market = convertMarketData(firstMarketQuery.data, '0');
+        if (market) {
           contractMarkets.push(market);
-          console.log('✅ Successfully created market object:', market);
-        } catch (error) {
-          console.error('❌ Error processing market data:', error);
-          // Don't add the market if there's an error processing it
         }
-      } else {
-        console.log('❌ Market data conditions not met - no market will be displayed');
       }
       
-      console.log('Setting contractMarkets (length):', contractMarkets.length);
-      console.log('contractMarkets:', contractMarkets);
       setMarkets(contractMarkets);
     }
     console.log('=== END MARKETS UPDATE ===');
-  }, [isConnected, userMarketsQuery.data, firstMarketQuery.data, marketCount]);
+  }, [
+    isConnected, 
+    showAllMarkets, 
+    userMarketsQuery.data, 
+    firstMarketQuery.data, 
+    market1Query.data,
+    market2Query.data,
+    market3Query.data,
+    market4Query.data,
+    marketCount
+  ]);
 
   const handleShare = (market: Market) => {
     console.log('🚀 Navigating to embeds page with market:', market.id);
@@ -221,7 +250,7 @@ export default function RecentMarketsTable({ isConnected, userAddress }: RecentM
   return (
     <section>
       <h2 className="font-display text-2xl font-bold tracking-tight text-text-light dark:text-text-dark px-1 pb-4 pt-2">
-        Recent Markets
+        {showAllMarkets ? 'All Markets' : 'Recent Markets'}
       </h2>
       <div className="rounded-xl border border-white/10 overflow-hidden bg-surface-dark/50 dark:bg-surface-dark">
         <div className="overflow-x-auto">
@@ -255,10 +284,12 @@ export default function RecentMarketsTable({ isConnected, userAddress }: RecentM
                       </span>
                       <div>
                         <p className="text-text-dark font-medium">
-                          {isConnected ? 'No markets created yet' : 'Connect wallet to view your markets'}
+                          {showAllMarkets ? 'No markets available yet' :
+                           isConnected ? 'No markets created yet' : 'Connect wallet to view your markets'}
                         </p>
                         <p className="text-text-muted-dark text-sm">
-                          {isConnected ? 'Create your first prediction market to get started' : 'Connect your wallet to see your created markets'}
+                          {showAllMarkets ? 'Be the first to create a prediction market!' :
+                           isConnected ? 'Create your first prediction market to get started' : 'Connect your wallet to see your created markets'}
                         </p>
                       </div>
                       {isConnected && (

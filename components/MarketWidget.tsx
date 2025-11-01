@@ -215,7 +215,7 @@ export default function MarketWidget({
         <div className="px-4 pb-3">
           <div className="flex items-center justify-center gap-2 text-xs opacity-50">
             <span>Powered by</span>
-            <span className="font-semibold">AuracleMarket</span>
+            <span className="font-semibold">ParagraphMarket</span>
           </div>
         </div>
       )}

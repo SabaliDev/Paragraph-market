@@ -95,7 +95,7 @@ export default function MarketImageGenerator({ market, onImageGenerated }: Marke
     // Draw logo/brand
     ctx.font = 'bold 32px Inter';
     ctx.fillStyle = accentColor;
-    ctx.fillText('AuracleMarket', width / 2, 60);
+    ctx.fillText('ParagraphMarket', width / 2, 60);
     
     // Draw category
     ctx.font = '20px Inter';

@@ -76,7 +76,7 @@ export default function Sidebar() {
           </defs>
         </svg>
         <h1 className="font-display text-lg font-bold text-text-light dark:text-text-dark">
-          AuracleMarket
+          ParagraphMarket
         </h1>
       </div>
 

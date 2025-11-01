@@ -88,7 +88,7 @@ export default function MarketEmbedsPage() {
             optionAOdds: 5000,
             optionBOdds: 5000,
             totalPredictions: bigIntToNumber(marketData[8]) + bigIntToNumber(marketData[9]),
-            totalVolume: `${formatTokenAmount(BigInt(bigIntToNumber(marketData[8])) + BigInt(bigIntToNumber(marketData[9])))} BNB`,
+            totalVolume: `${formatTokenAmount(BigInt(bigIntToNumber(marketData[8])) + BigInt(bigIntToNumber(marketData[9])))} PMT`,
             endTime: new Date(bigIntToNumber(marketData[3]) * 1000).toISOString(),
             resolutionTime: new Date(bigIntToNumber(marketData[4]) * 1000).toISOString(),
             status: marketData[10] ? 'resolved' : 'active',

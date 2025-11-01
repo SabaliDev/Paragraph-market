@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
-import { usePredictionMarketRead, usePredictionMarketWrite, formatTokenAmount, calculateOddsPercentage } from '../../../hooks/useContracts';
+import { usePredictionMarketRead, useBettingOperations, formatTokenAmount, calculateOddsPercentage } from '../../../hooks/useContracts';
 import { bigIntToNumber, bigIntToString, formatAddress } from '../../../lib/utils';
 
 interface MarketData {
@@ -28,7 +28,9 @@ export default function MarketDetailPage() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const { getMarketInfo, getMarketOdds, getUserShares } = usePredictionMarketRead();
-  const { buyShares, isPending, isConfirming, isConfirmed, error } = usePredictionMarketWrite();
+  const { betWithApproval, checkBettingRequirements, isPending, balance, allowance } = useBettingOperations();
+  const [error, setError] = useState<string | null>(null);
+  const [isConfirmed, setIsConfirmed] = useState(false);
   
   const [market, setMarket] = useState<MarketData | null>(null);
   const [selectedOption, setSelectedOption] = useState<'A' | 'B'>('A');
@@ -114,13 +116,19 @@ export default function MarketDetailPage() {
     if (!betAmount || !isConnected || !market) return;
     
     try {
-      await buyShares(
+      setError(null);
+      await betWithApproval(
         marketId,
         selectedOption === 'A',
         betAmount
       );
-    } catch (error) {
+      setIsConfirmed(true);
+      // Reset form
+      setBetAmount('');
+      setTimeout(() => setIsConfirmed(false), 3000);
+    } catch (error: any) {
       console.error('Error submitting prediction:', error);
+      setError(error.message || 'An error occurred while submitting your prediction');
     }
   };
   
@@ -141,7 +149,7 @@ export default function MarketDetailPage() {
   const getTotalVolume = () => {
     if (!market) return '$0';
     const total = market.totalOptionABets + market.totalOptionBBets;
-    return `${formatTokenAmount(total)} BNB`;
+    return `${formatTokenAmount(total)} PMT`;
   };
   
   const getTotalParticipants = () => {
@@ -171,10 +179,10 @@ export default function MarketDetailPage() {
           <h3 className="font-display text-xl font-bold text-text-dark mb-2">Market Not Found</h3>
           <p className="text-text-muted-dark mb-4">The market you're looking for doesn't exist or has been removed.</p>
           <button 
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push('/markets')}
             className="px-6 py-2 bg-primary text-background-dark rounded-lg font-bold hover:brightness-110 transition-all"
           >
-            Back to Dashboard
+            Explore Markets
           </button>
         </div>
       </div>
@@ -191,8 +199,7 @@ export default function MarketDetailPage() {
             {/* Header Section */}
             <div className="flex justify-between items-center gap-2 px-6 py-4 border-b border-border-color">
               <div className="flex items-center gap-4">
-                <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-10 w-10 border-2 border-accent-cyan/50" 
-                     style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAFjhR2y0SiY5InLit17Fyje-N3-9WuyYEfqM2Bx8AYJwQX7Sqvv-I0zPvq-5_OXA29F-L0sYht4GCHUl5PMcU9TYsj4xuCsFSJQn_uudx9YiywcG46zdwRLlwBq8F5sf7YgXRvHBcLs-sa1HVSbQm3o82cvgFmP1IBO9z4OkQ5vQDJeufBG4oqLvfsozhmIJ2YwCXmvzqAGSIO_3hHEpHcg8dR1laY-ROc_sn2ED1RWuq-0B2UCaK5fUIHGwqlTbxl8aTiygMyirY")'}} />
+                <div/>
                 <p className="text-text-muted-dark text-base font-normal leading-normal flex-1 truncate">
                   Created by {formatAddress(market.creator)}
                 </p>
@@ -238,6 +245,22 @@ export default function MarketDetailPage() {
                 {!market.resolved && isConnected && (
                   <div className="flex flex-col gap-4 bg-surface-dark/50 p-4 rounded-lg border border-border-color">
                     <p className="text-white text-lg font-medium leading-normal">Make your prediction</p>
+                    
+                    {/* Token Requirements Info */}
+                    <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="material-symbols-outlined text-blue-400 text-sm">info</span>
+                        <span className="text-blue-400 text-sm font-medium">PMT Token Required</span>
+                      </div>
+                      <div className="text-xs text-text-muted-dark space-y-1">
+                        <div>Balance: {balance ? formatTokenAmount(balance) : '0'} PMT</div>
+                        <div>Approved: {allowance ? formatTokenAmount(allowance) : '0'} PMT</div>
+                        <div className="text-blue-400">
+                          {(!balance || balance === BigInt(0)) && "Get PMT tokens from the Dashboard to start betting"}
+                          {balance && balance > BigInt(0) && (!allowance || allowance === BigInt(0)) && "Approve PMT tokens for betting in the Dashboard"}
+                        </div>
+                      </div>
+                    </div>
                     
                     {/* Segmented Buttons */}
                     <div className="flex">
@@ -288,14 +311,14 @@ export default function MarketDetailPage() {
                           step="0.001"
                           min="0"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dark font-bold">BNB</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dark font-bold">PMT</span>
                       </div>
                     </label>
                     
                     {/* CTA Button */}
                     <button
   onClick={handleSubmitPrediction}
-  disabled={!betAmount || isPending || isConfirming || market.resolved}
+  disabled={!betAmount || isPending || market.resolved}
   className="
     w-full h-12 flex items-center justify-center rounded-lg 
     bg-secondary text-background-dark font-bold text-base 
@@ -305,13 +328,13 @@ export default function MarketDetailPage() {
     shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
   "
 >
-  {isPending || isConfirming ? 'Processing...' : 'Submit Prediction'}
+  {isPending ? 'Processing...' : 'Submit Prediction'}
 </button>
 
                     
                     {error && (
                       <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                        <p className="text-red-400 text-sm">Error: {error.message}</p>
+                        <p className="text-red-400 text-sm">Error: {error}</p>
                       </div>
                     )}
                     
@@ -324,16 +347,16 @@ export default function MarketDetailPage() {
                 )}
                 
                 {/* User's Current Position */}
-                {isConnected && (userShares.optionA > 0n || userShares.optionB > 0n) && (
+                {isConnected && (userShares.optionA > BigInt(0) || userShares.optionB > BigInt(0)) && (
                   <div className="flex flex-col gap-3 bg-surface-dark/50 p-4 rounded-lg border border-border-color">
                     <p className="text-white text-lg font-medium">Your Position</p>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg text-center">
-                        <div className="text-lg font-bold text-primary">{formatTokenAmount(userShares.optionA)} BNB</div>
+                        <div className="text-lg font-bold text-primary">{formatTokenAmount(userShares.optionA)} PMT</div>
                         <div className="text-xs text-text-dark">{market.optionA}</div>
                       </div>
                       <div className="p-3 bg-secondary/10 border border-secondary/20 rounded-lg text-center">
-                        <div className="text-lg font-bold text-secondary">{formatTokenAmount(userShares.optionB)} BNB</div>
+                        <div className="text-lg font-bold text-secondary">{formatTokenAmount(userShares.optionB)} PMT</div>
                         <div className="text-xs text-text-dark">{market.optionB}</div>
                       </div>
                     </div>
@@ -374,12 +397,12 @@ export default function MarketDetailPage() {
                     <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg text-center">
                       <div className="text-2xl font-bold text-primary">{odds.optionAOdds}%</div>
                       <div className="text-sm text-text-dark mt-1">{market.optionA}</div>
-                      <div className="text-xs text-text-muted-dark mt-2">{formatTokenAmount(market.totalOptionABets)} BNB</div>
+                      <div className="text-xs text-text-muted-dark mt-2">{formatTokenAmount(market.totalOptionABets)} PMT</div>
                     </div>
                     <div className="p-4 bg-secondary/10 border border-secondary/20 rounded-lg text-center">
                       <div className="text-2xl font-bold text-secondary">{odds.optionBOdds}%</div>
                       <div className="text-sm text-text-dark mt-1">{market.optionB}</div>
-                      <div className="text-xs text-text-muted-dark mt-2">{formatTokenAmount(market.totalOptionBBets)} BNB</div>
+                      <div className="text-xs text-text-muted-dark mt-2">{formatTokenAmount(market.totalOptionBBets)} PMT</div>
                     </div>
                   </div>
                 </div>
@@ -412,10 +435,10 @@ export default function MarketDetailPage() {
             {/* Footer */}
             <div className="px-6 py-3 border-t border-border-color text-center">
               <button 
-                onClick={() => router.push('/dashboard')}
+                onClick={() => router.push('/markets')}
                 className="text-text-muted-light text-sm hover:text-accent-cyan transition-colors"
               >
-                ← Back to Dashboard
+               Explore more markets 
               </button>
             </div>
           </div>
