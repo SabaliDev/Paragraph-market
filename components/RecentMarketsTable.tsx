@@ -87,13 +87,21 @@ const marketsData: Market[] = [
   }
 ];
 
-function StatusBadge({ status }: { status: 'active' | 'resolved' }) {
+function StatusBadge({ status }: { status: 'active' | 'resolved' | 'cancelled' }) {
   const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
   
   if (status === 'active') {
     return (
       <span className={`${baseClasses} bg-primary/20 text-primary`}>
         Active
+      </span>
+    );
+  }
+  
+  if (status === 'cancelled') {
+    return (
+      <span className={`${baseClasses} bg-red-500/20 text-red-400`}>
+        Cancelled
       </span>
     );
   }
@@ -162,8 +170,8 @@ export default function RecentMarketsTable({ isConnected, userAddress, showAllMa
         description: '',
         optionA: optionA || 'Yes',
         optionB: optionB || 'No',
-        optionAOdds: totalPredictions > 0 ? Math.round((optionABets / totalPredictions) * 10000) : 5000,
-        optionBOdds: totalPredictions > 0 ? Math.round((optionBBets / totalPredictions) * 10000) : 5000,
+        optionAOdds: totalPredictions > 0 ? Math.round((optionABets / totalPredictions) * 100) : 50,
+        optionBOdds: totalPredictions > 0 ? Math.round((optionBBets / totalPredictions) * 100) : 50,
         totalPredictions: totalPredictions,
         totalVolume: `${formatTokenAmount(totalVolumeWei)} PMT`,
         endTime: endTimeSeconds > 0 ? new Date(endTimeSeconds * 1000).toISOString() : new Date().toISOString(),
@@ -217,7 +225,7 @@ export default function RecentMarketsTable({ isConnected, userAddress, showAllMa
       // Show real markets from contract (original logic for user markets)
       const contractMarkets: Market[] = [];
       
-      if (firstMarketQuery.data && marketCount && marketCount > 0n) {
+      if (firstMarketQuery.data && marketCount && marketCount > BigInt(0)) {
         const market = convertMarketData(firstMarketQuery.data, '0');
         if (market) {
           contractMarkets.push(market);

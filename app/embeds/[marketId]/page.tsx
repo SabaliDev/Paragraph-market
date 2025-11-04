@@ -9,7 +9,7 @@ import UrlCopyComponent from '../../../components/UrlCopyComponent';
 import IframeEmbedComponent from '../../../components/IframeEmbedComponent';
 import { Market } from '../../../types/embed';
 import { usePredictionMarketRead, formatTokenAmount } from '../../../hooks/useContracts';
-import { bigIntToNumber, bigIntToString } from '../../../lib/utils';
+import { bigIntToNumber, bigIntToString, safeStringify } from '../../../lib/utils';
 
 // Mock data - replace with actual API calls
 const mockMarkets: Market[] = [
@@ -70,13 +70,13 @@ export default function MarketEmbedsPage() {
     console.log('marketIdFromUrl:', marketIdFromUrl);
     console.log('isConnected:', isConnected);
     console.log('marketCount:', marketCount);
-    console.log('marketQuery.data:', marketQuery.data);
+    console.log('marketQuery.data:', safeStringify(marketQuery.data));
     
-    if (isConnected && marketCount && marketCount > 0n) {
+    if (isConnected && marketCount && marketCount > BigInt(0)) {
       // Load contract markets
       if (marketQuery.data) {
         try {
-          const marketData = marketQuery.data as any[];
+          const marketData = marketQuery.data as unknown as any[];
           
           const market: Market = {
             id: marketIdFromUrl || '0',
@@ -85,10 +85,10 @@ export default function MarketEmbedsPage() {
             description: '',
             optionA: bigIntToString(marketData[6] || 'Yes'),
             optionB: bigIntToString(marketData[7] || 'No'),
-            optionAOdds: 5000,
-            optionBOdds: 5000,
+            optionAOdds: 50,
+            optionBOdds: 50,
             totalPredictions: bigIntToNumber(marketData[8]) + bigIntToNumber(marketData[9]),
-            totalVolume: `${formatTokenAmount(BigInt(bigIntToNumber(marketData[8])) + BigInt(bigIntToNumber(marketData[9])))} PMT`,
+            totalVolume: `${formatTokenAmount((marketData[8] as bigint) + (marketData[9] as bigint))} PMT`,
             endTime: new Date(bigIntToNumber(marketData[3]) * 1000).toISOString(),
             resolutionTime: new Date(bigIntToNumber(marketData[4]) * 1000).toISOString(),
             status: marketData[10] ? 'resolved' : 'active',
@@ -96,7 +96,7 @@ export default function MarketEmbedsPage() {
             createdAt: new Date().toISOString()
           };
           
-          console.log('Loaded contract market:', market);
+          console.log('Loaded contract market:', safeStringify(market));
           setContractMarkets([market]);
           setSelectedMarket(market);
         } catch (error) {
@@ -168,11 +168,11 @@ export default function MarketEmbedsPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg text-center">
-                        <div className="text-lg font-bold text-primary">{Math.round(selectedMarket.optionAOdds / 100)}%</div>
+                        <div className="text-lg font-bold text-primary">{selectedMarket.optionAOdds}%</div>
                         <div className="text-xs text-text-dark">{selectedMarket.optionA}</div>
                       </div>
                       <div className="p-3 bg-white/5 border border-white/10 rounded-lg text-center">
-                        <div className="text-lg font-bold text-text-dark">{Math.round(selectedMarket.optionBOdds / 100)}%</div>
+                        <div className="text-lg font-bold text-text-dark">{selectedMarket.optionBOdds}%</div>
                         <div className="text-xs text-text-dark">{selectedMarket.optionB}</div>
                       </div>
                     </div>

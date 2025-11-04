@@ -127,24 +127,13 @@ export default function Sidebar() {
           </div>
         )}
 
-        <div className="flex items-center gap-3">
-          <div 
-            className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
-            style={{
-              backgroundImage: `url("https://lh3.googleusercontent.com/aida-public/AB6AXuD4Cu_NX33ZRY1kYgcCAHNHgZGTLBAyenWTVFA_lM-2cxQi7KzjnuaEcPPcGxqGIjLm4S4zOoxi3E2Pm_6vB4zaeauIJdL29YkCVxsq5j7Os6gNb7WSGblVZjoS2rt_YLxY70HIVzz8Fz7ZHErfcJS9k7SEMssiXlyI41P_kZShA2fjcZz8SEGmNv-OM280O8ThXRsGZ4yu36Lw8ojCPsLX-a9ZHUH23NWYZTkYTl4nNPGlhL26hvV5zO-XNYUixY2sOT4u01zxlTg")`
-            }}
-          />
-          <div className="flex flex-col">
-            <h2 className="text-text-dark text-sm font-medium">John Doe</h2>
-            <p className="text-text-muted-dark text-xs">Developer</p>
-          </div>
-        </div>
+       
         <a 
           className="flex items-center gap-3 px-3 py-2 mt-2 rounded-lg hover:bg-white/5 text-text-muted-dark hover:text-text-dark transition-colors" 
           href="#"
         >
-          <span className="material-symbols-outlined">logout</span>
-          <p className="text-sm font-medium">Logout</p>
+    
+         
         </a>
       </div>
     </aside>

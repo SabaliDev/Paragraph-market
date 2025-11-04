@@ -51,7 +51,9 @@ export function usePredictionMarketRead() {
       abi: PREDICTION_MARKET_ABI,
       functionName: 'getUserShares',
       args: [BigInt(marketId), address || '0x0'],
-      enabled: !!address,
+      query: {
+        enabled: !!address,
+      },
     });
   };
 
@@ -62,7 +64,9 @@ export function usePredictionMarketRead() {
       abi: PREDICTION_MARKET_ABI,
       functionName: 'getCreatorStats',
       args: [creatorAddress as `0x${string}`],
-      enabled: !!creatorAddress,
+      query: {
+        enabled: !!creatorAddress,
+      },
     });
   };
 
@@ -73,7 +77,9 @@ export function usePredictionMarketRead() {
       abi: PREDICTION_MARKET_ABI,
       functionName: 'getCreatorMarkets',
       args: [creatorAddress as `0x${string}`],
-      enabled: !!creatorAddress,
+      query: {
+        enabled: !!creatorAddress,
+      },
     });
   };
 
@@ -98,7 +104,9 @@ export function usePredictionMarketRead() {
       abi: PREDICTION_MARKET_ABI,
       functionName: 'getMarketInfo',
       args: [BigInt(marketId)],
-      enabled: enabled,
+      query: {
+        enabled: enabled,
+      },
     });
   };
 
@@ -234,7 +242,9 @@ export function useTokenOperations() {
     abi: MOCK_ERC20_ABI,
     functionName: 'balanceOf',
     args: [address || '0x0'],
-    enabled: !!address,
+    query: {
+      enabled: !!address,
+    },
   });
 
   // Get allowance for prediction market
@@ -243,7 +253,9 @@ export function useTokenOperations() {
     abi: MOCK_ERC20_ABI,
     functionName: 'allowance',
     args: [address || '0x0', CONTRACT_ADDRESSES.PREDICTION_MARKET],
-    enabled: !!address,
+    query: {
+      enabled: !!address,
+    },
   });
 
   // Approve tokens for prediction market
@@ -288,8 +300,8 @@ export const parseTokenAmount = (amount: string) => {
 
 // Calculate odds percentage
 export const calculateOddsPercentage = (optionAmount: bigint, totalAmount: bigint) => {
-  if (totalAmount === 0n) return 50; // Default to 50% if no bets
-  return Number((optionAmount * 100n) / totalAmount);
+  if (totalAmount === BigInt(0)) return 50; // Default to 50% if no bets
+  return Number((optionAmount * BigInt(100)) / totalAmount);
 };
 
 // Hook for combined betting operations (approval + betting)

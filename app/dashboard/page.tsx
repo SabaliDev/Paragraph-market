@@ -7,6 +7,7 @@ import RecentMarketsTable from '../../components/RecentMarketsTable';
 import ConnectWallet from '../../components/ConnectWallet';
 import PMTTokenWidget from '../../components/PMTTokenWidget';
 import { usePredictionMarketRead } from '../../hooks/useContracts';
+import { CreatorStats } from '../../lib/contracts';
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount();
@@ -14,6 +15,14 @@ export default function Dashboard() {
   
   // Get creator stats if connected
   const creatorStatsQuery = getCreatorStats(address || '');
+  
+  // Transform tuple data to CreatorStats interface
+  const creatorStats: CreatorStats | undefined = creatorStatsQuery.data ? {
+    marketsCreated: creatorStatsQuery.data[0],
+    totalVolume: creatorStatsQuery.data[1], 
+    totalFeesEarned: creatorStatsQuery.data[2],
+    availableFees: creatorStatsQuery.data[3]
+  } : undefined;
   
   return (
     <div className="relative flex min-h-screen w-full">
@@ -68,7 +77,7 @@ export default function Dashboard() {
             {/* Stats Cards */}
             <StatsCards 
               marketCount={marketCount} 
-              creatorStats={creatorStatsQuery.data}
+              creatorStats={creatorStats}
               isConnected={isConnected}
             />
 

@@ -36,7 +36,7 @@ export default function MarketDetailPage() {
   const [selectedOption, setSelectedOption] = useState<'A' | 'B'>('A');
   const [betAmount, setBetAmount] = useState('');
   const [odds, setOdds] = useState({ optionAOdds: 50, optionBOdds: 50 });
-  const [userShares, setUserShares] = useState({ optionA: 0n, optionB: 0n, hasClaimed: false });
+  const [userShares, setUserShares] = useState({ optionA: BigInt(0), optionB: BigInt(0), hasClaimed: false });
   const [loading, setLoading] = useState(true);
   
   const marketId = parseInt(params.marketId as string);
@@ -92,14 +92,17 @@ export default function MarketDetailPage() {
   }, [marketQuery.data, marketId]);
   
   useEffect(() => {
-    if (oddsQuery.data) {
-      const [optionAOdds, optionBOdds] = oddsQuery.data;
+    if (market) {
+      const totalBets = market.totalOptionABets + market.totalOptionBBets;
+      const optionAOdds = calculateOddsPercentage(market.totalOptionABets, totalBets);
+      const optionBOdds = calculateOddsPercentage(market.totalOptionBBets, totalBets);
+      
       setOdds({
-        optionAOdds: bigIntToNumber(optionAOdds),
-        optionBOdds: bigIntToNumber(optionBOdds)
+        optionAOdds,
+        optionBOdds
       });
     }
-  }, [oddsQuery.data]);
+  }, [market]);
   
   useEffect(() => {
     if (userSharesQuery.data) {

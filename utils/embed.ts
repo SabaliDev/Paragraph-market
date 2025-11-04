@@ -75,7 +75,7 @@ export const generateMarketImageUrl = (market: Market, template: string = 'defau
 };
 
 export const formatOdds = (odds: number): string => {
-  return `${Math.round(odds / 100)}%`;
+  return `${Math.round(odds)}%`;
 };
 
 export const formatVolume = (volume: string): string => {
